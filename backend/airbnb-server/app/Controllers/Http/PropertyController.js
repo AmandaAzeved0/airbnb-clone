@@ -8,22 +8,31 @@ const Property = use('App/Models/Property')
  */
 class PropertyController {
 
-  async index () {
-    const properties = Property.all()
+  async index ({request}) {
+    const { latitude, longitude } = request.all()
+
+    const properties = Property.query()
+      .with('images')
+      .nearBy(latitude, longitude, 10)
+      .fetch()
 
     return properties
   }
 
 
-  /**
-   * Create/save a new property.
-   * POST properties
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   */
-  async store ({ request, response }) {
+  async store ({auth, request }) {
+    const { id } = auth.user
+    const data = request.only([
+      'title',
+      'address',
+      'latitude',
+      'longitude',
+      'price'
+    ])
+
+    const property = await Property.create({ ...data, user_id: id })
+
+    return property
   }
 
 
@@ -36,25 +45,25 @@ class PropertyController {
   }
 
 
-  /**
-   * Update property details.
-   * PUT or PATCH properties/:id
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   */
   async update ({ params, request, response }) {
-  }
+    const property = await Property.findOrFail(params.id)
 
-  /**
-   * Delete a property with id.
-   * DELETE properties/:id
-   *
-   * @param {object} ctx
-   * @param {Request} ctx.request
-   * @param {Response} ctx.response
-   */
+    const data = request.only([
+      'title',
+      'address',
+      'latitude',
+      'longitude',
+      'price'
+    ])
+    //verifica o que foi alterado e atualiza
+    property.merge(data)
+
+    await property.save()
+
+    return property
+    }
+
+
   async destroy ({ params, request, response }) {
 
     const property = await Property.findOrFail(params.id)
