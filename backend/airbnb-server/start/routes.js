@@ -22,3 +22,5 @@ Route.get('/', () => {
 
 Route.post('users', 'UserController.create')
 Route.post('sessions', 'SessionController.create')
+//criar todas as rotas de imóveis e garante que que usuários não autenticados não possam utilizar essas rotas.
+Route.resource('properties', 'PropertyController').apiOnly().middleware('auth')
